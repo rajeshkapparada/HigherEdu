@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Countries - Developer Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="dev-container">
+
+    <div class="dev-header">
+        <div>
+            <h1>Developer Panel</h1>
+            <p class="dev-sub">Logged in as <strong>{{ session['dev_username'] }}</strong></p>
+        </div>
+        <a href="/dev/logout" class="btn dev-logout-btn">Logout</a>
+    </div>
+
+    <div class="dev-nav">
+        <a href="/dev/dashboard">Students</a>
+        <a href="/dev/countries" class="active">Countries</a>
+        <a href="/dev/states">States</a>
+        <a href="/dev/cities">Cities</a>
+        <a href="/dev/colleges">Colleges</a>
+        <a href="/dev/courses">Courses</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="dev-form-card">
+        <h3 class="dev-section-title">Add New Country</h3>
+        <form method="POST" class="inline-form">
+            <input type="text" name="name" placeholder="e.g. Australia" required class="search-input">
+            <button type="submit" class="btn dev-btn" style="width:auto; padding:10px 24px; margin-top:0;">Add Country</button>
+        </form>
+    </div>
+
+    <h3 class="dev-section-title" style="margin-bottom:12px;">All Countries ({{ countries|length }})</h3>
+
+    {% if countries %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Country Name</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in countries %}
+            <tr>
+                <td>{{ c[0] }}</td>
+                <td>{{ c[1] }}</td>
+                <td>
+                    <form method="POST" action="/dev/countries/{{ c[0] }}/delete"
+                          onsubmit="return confirm('Delete {{ c[1] }}? This will also delete all states, cities, colleges, and courses under it.')">
+                        <button type="submit" class="btn delete-btn">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="dev-empty">No countries added yet.</p>
+    {% endif %}
+
+</div>
+</body>
+</html>

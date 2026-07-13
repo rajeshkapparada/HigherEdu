@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Developer Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="dev-container">
+
+    <div class="dev-header">
+        <div>
+            <h1>Developer Dashboard</h1>
+            <p class="dev-sub">Logged in as <strong>{{ session['dev_username'] }}</strong></p>
+        </div>
+        <a href="/dev/logout" class="btn dev-logout-btn">Logout</a>
+    </div>
+
+    <div class="dev-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ total }}</div>
+            <div class="stat-label">Total Students</div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}" style="margin-bottom:16px;">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    {% if students %}
+    <table>
+        <thead>
+            <tr>
+                <th>DB ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Student ID</th>
+                <th>Level</th>
+                <th>Country</th>
+                <th>Course</th>
+                <th>Registered</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>{{ s[0] }}</td>
+                <td>{{ s[1] }}</td>
+                <td>{{ s[2] }}</td>
+                <td>{{ s[3] }}</td>
+                <td>{{ s[4] }}</td>
+                <td>{{ s[5] }}</td>
+                <td>{{ s[6] }}</td>
+                <td>{{ s[8].strftime('%d %b %Y') }}</td>
+                <td class="action-cell">
+                    <a href="/dev/students/{{ s[0] }}/edit" class="btn edit-btn">Edit</a>
+                    <form method="POST" action="/dev/students/{{ s[0] }}/delete"
+                          style="display:inline"
+                          onsubmit="return confirm('Are you sure you want to delete {{ s[1] }}?')">
+                        <button type="submit" class="btn delete-btn">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="dev-empty">No students in the database yet.</p>
+    {% endif %}
+
+</div>
+</body>
+</html>

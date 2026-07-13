@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Courses - Developer Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="dev-container">
+
+    <div class="dev-header">
+        <div>
+            <h1>Developer Panel</h1>
+            <p class="dev-sub">Logged in as <strong>{{ session['dev_username'] }}</strong></p>
+        </div>
+        <a href="/dev/logout" class="btn dev-logout-btn">Logout</a>
+    </div>
+
+    <div class="dev-nav">
+        <a href="/dev/dashboard">Students</a>
+        <a href="/dev/countries">Countries</a>
+        <a href="/dev/states">States</a>
+        <a href="/dev/cities">Cities</a>
+        <a href="/dev/colleges">Colleges</a>
+        <a href="/dev/courses" class="active">Courses</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="dev-form-card">
+        <h3 class="dev-section-title">Add New Course</h3>
+        <form method="POST">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>College</label>
+                    <select name="college_id" required style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                        <option value="">-- Select College --</option>
+                        {% for c in colleges %}
+                        <option value="{{ c[0] }}">{{ c[2] }} — {{ c[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Course Name</label>
+                    <input type="text" name="name" placeholder="e.g. MSc Computer Science" required>
+                </div>
+                <div class="form-group">
+                    <label>Level</label>
+                    <select name="level" required style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                        <option value="Masters">Masters</option>
+                        <option value="Bachelors">Bachelors</option>
+                        <option value="PhD">PhD</option>
+                        <option value="Diploma">Diploma</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fee Per Year</label>
+                    <input type="number" name="fee_per_year" placeholder="e.g. 250000" required>
+                </div>
+                <div class="form-group">
+                    <label>Currency</label>
+                    <select name="currency" style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                        <option value="INR">INR</option>
+                        <option value="AUD">AUD</option>
+                        <option value="GBP">GBP</option>
+                        <option value="USD">USD</option>
+                        <option value="CAD">CAD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="NZD">NZD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duration</label>
+                    <input type="text" name="duration" placeholder="e.g. 2 years" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="3" placeholder="What this course covers, entry requirements, career outcomes..."></textarea>
+            </div>
+            <button type="submit" class="btn dev-btn" style="width:auto; padding:10px 28px;">Add Course</button>
+        </form>
+    </div>
+
+    <h3 class="dev-section-title" style="margin-bottom:12px;">All Courses ({{ courses|length }})</h3>
+
+    {% if courses %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Course Name</th>
+                <th>Level</th>
+                <th>College</th>
+                <th>Country</th>
+                <th>Fee / Year</th>
+                <th>Duration</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in courses %}
+            <tr>
+                <td>{{ c[0] }}</td>
+                <td>{{ c[1] }}</td>
+                <td>{{ c[2] }}</td>
+                <td>{{ c[6] }}</td>
+                <td>{{ c[7] }}</td>
+                <td>{{ c[5] }} {{ c[4] }}</td>
+                <td>{{ c[5] }}</td>
+                <td class="action-cell">
+                    <a href="/dev/courses/{{ c[0] }}/edit" class="btn edit-btn">Edit</a>
+                    <form method="POST" action="/dev/courses/{{ c[0] }}/delete" style="display:inline"
+                          onsubmit="return confirm('Delete {{ c[1] }}?')">
+                        <button type="submit" class="btn delete-btn">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="dev-empty">No courses added yet. Add a college first.</p>
+    {% endif %}
+
+</div>
+</body>
+</html>

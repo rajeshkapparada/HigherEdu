@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Course - Developer Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="dev-container">
+
+    <div class="dev-header">
+        <div>
+            <h1>Developer Panel</h1>
+            <p class="dev-sub">Editing Course</p>
+        </div>
+        <a href="/dev/logout" class="btn dev-logout-btn">Logout</a>
+    </div>
+
+    <div class="dev-nav">
+        <a href="/dev/dashboard">Students</a>
+        <a href="/dev/countries">Countries</a>
+        <a href="/dev/states">States</a>
+        <a href="/dev/cities">Cities</a>
+        <a href="/dev/colleges">Colleges</a>
+        <a href="/dev/courses" class="active">Courses</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="dev-form-card">
+        <h3 class="dev-section-title">Edit Course</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label>College</label>
+                <select name="college_id" required style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                    {% for c in colleges %}
+                    <option value="{{ c[0] }}" {% if course[7] == c[0] %}selected{% endif %}>
+                        {{ c[2] }} — {{ c[1] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Course Name</label>
+                <input type="text" name="name" value="{{ course[1] }}" required>
+            </div>
+            <div class="form-group">
+                <label>Level</label>
+                <select name="level" style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                    {% for level in ['Masters', 'Bachelors', 'PhD', 'Diploma'] %}
+                    <option value="{{ level }}" {% if course[2] == level %}selected{% endif %}>{{ level }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fee Per Year</label>
+                    <input type="number" name="fee_per_year" value="{{ course[3] }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Currency</label>
+                    <select name="currency" style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                        {% for cur in ['INR', 'AUD', 'GBP', 'USD', 'CAD', 'EUR', 'NZD'] %}
+                        <option value="{{ cur }}" {% if course[4] == cur %}selected{% endif %}>{{ cur }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duration</label>
+                    <input type="text" name="duration" value="{{ course[5] }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="4">{{ course[6] or '' }}</textarea>
+            </div>
+            <button type="submit" class="btn dev-btn" style="width:auto; padding:10px 28px;">Save Changes</button>
+            <a href="/dev/courses" class="btn" style="background:#6c757d; width:auto; padding:10px 20px; margin-left:8px;">Cancel</a>
+        </form>
+    </div>
+
+</div>
+</body>
+</html>

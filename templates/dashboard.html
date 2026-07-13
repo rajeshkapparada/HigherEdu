@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HigherEDU — Student Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #0c1f3f;
+            --navy-2: #071630;
+            --gold:   #c9a84c;
+            --gold-2: #e6c976;
+            --cream:  #f0ece3;
+        }
+
+        body.dashboard-page {
+            display: block;
+            background: #eef1f6;
+            font-family: 'DM Sans', 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* ── Navbar ── */
+        .edu-nav {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 60px;
+            height: 74px;
+            background: rgba(9, 24, 51, 0.72);
+            backdrop-filter: blur(18px) saturate(150%);
+            -webkit-backdrop-filter: blur(18px) saturate(150%);
+            border-bottom: 1px solid rgba(201,168,76,0.22);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.28);
+        }
+
+        .edu-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 27px;
+            font-weight: 700;
+            color: var(--cream);
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+        }
+
+        .edu-logo .cap-h,
+        .edu-logo .cap-e {
+            font-size: 31px;
+            background: linear-gradient(160deg, var(--gold-2), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 22px rgba(201,168,76,0.45);
+        }
+
+        .nav-logout {
+            width: auto !important;
+            padding: 9px 24px !important;
+            margin-top: 0 !important;
+            font-size: 13px !important;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            background: transparent !important;
+            border: 1.5px solid rgba(201,168,76,0.55) !important;
+            color: var(--gold) !important;
+            border-radius: 6px !important;
+            transition: all 0.25s !important;
+        }
+
+        .nav-logout:hover {
+            background: rgba(201,168,76,0.12) !important;
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 24px rgba(201,168,76,0.3);
+        }
+
+        /* ── Hero ── */
+        .hero-section {
+            position: relative;
+            background:
+                radial-gradient(120% 120% at 80% 0%, #123056 0%, transparent 55%),
+                radial-gradient(100% 100% at 0% 100%, #0a1a38 0%, transparent 60%),
+                linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 100%);
+            padding: 100px 60px 120px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+            overflow: hidden;
+            perspective: 1400px;
+        }
+
+        /* floating gradient orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb-1 { width: 460px; height: 460px; top: -140px; right: -80px;
+            background: radial-gradient(circle, rgba(201,168,76,0.22), transparent 70%);
+            animation: orbFloat 14s ease-in-out infinite; }
+        .orb-2 { width: 380px; height: 380px; bottom: -160px; left: -60px;
+            background: radial-gradient(circle, rgba(46,110,190,0.28), transparent 70%);
+            animation: orbFloat 18s ease-in-out infinite reverse; }
+        @keyframes orbFloat {
+            0%,100% { transform: translate(0,0) scale(1); }
+            50%     { transform: translate(30px,-40px) scale(1.12); }
+        }
+
+        /* subtle grid overlay */
+        .hero-section::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(201,168,76,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(201,168,76,0.05) 1px, transparent 1px);
+            background-size: 54px 54px;
+            mask-image: radial-gradient(120% 90% at 50% 40%, #000 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(120% 90% at 50% 40%, #000 30%, transparent 80%);
+            z-index: 0;
+        }
+
+        .hero-text {
+            position: relative;
+            z-index: 2;
+            max-width: 520px;
+            animation: fadeUp 0.8s ease both;
+        }
+
+        .hero-eyebrow {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 20px;
+            padding: 7px 16px;
+            border: 1px solid rgba(201,168,76,0.3);
+            border-radius: 40px;
+            background: rgba(201,168,76,0.06);
+        }
+
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            font-weight: 800;
+            color: var(--cream);
+            line-height: 1.1;
+            margin-bottom: 24px;
+            text-align: left;
+            text-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        }
+        .hero-title .accent {
+            background: linear-gradient(120deg, var(--gold-2), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 16px;
+            line-height: 1.85;
+            color: rgba(240,236,227,0.7);
+            margin-bottom: 42px;
+            font-weight: 300;
+        }
+
+        .get-data-btn {
+            width: auto !important;
+            display: inline-flex !important;
+            align-items: center;
+            gap: 11px;
+            padding: 15px 38px !important;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px !important;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--navy) !important;
+            border-radius: 8px !important;
+            margin-top: 0 !important;
+            background: linear-gradient(135deg, var(--gold-2), var(--gold)) !important;
+            box-shadow: 0 10px 30px rgba(201,168,76,0.35), inset 0 1px 0 rgba(255,255,255,0.5) !important;
+            transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+        }
+        .get-data-btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 18px 44px rgba(201,168,76,0.5), inset 0 1px 0 rgba(255,255,255,0.6) !important;
+        }
+        .get-data-btn svg { transition: transform 0.4s ease; }
+        .get-data-btn:hover svg { transform: rotate(180deg); }
+
+        /* ── 3D Graduation Caps ── */
+        .caps-stage {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            gap: 26px;
+            align-items: center;
+            flex-shrink: 0;
+            transform-style: preserve-3d;
+            animation: fadeUp 0.8s 0.2s ease both;
+        }
+
+        .cap-scene {
+            width: 150px;
+            height: 170px;
+            perspective: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 16px;
+        }
+        .cap-scene.raised { transform: translateY(-34px); }
+
+        .cap-3d {
+            position: relative;
+            width: 150px;
+            height: 120px;
+            transform-style: preserve-3d;
+            /* base pose; JS drives spin from scroll + idle */
+            transform: rotateX(58deg) rotateZ(0deg) translateZ(0);
+            will-change: transform;
+        }
+
+        /* head cap body sitting beneath the board */
+        .mortar-cap {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 66px; height: 66px;
+            margin: -33px;
+            transform: translateZ(-26px);
+            background: radial-gradient(circle at 50% 30%, #2a2b31, #0c0c0f 75%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
+        }
+
+        /* extruded slab layers for thickness */
+        .board-layer {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 132px; height: 132px;
+            margin: -66px;
+            border-radius: 8px;
+            background: #08080b;
+        }
+
+        .board-top {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 132px; height: 132px;
+            margin: -66px;
+            border-radius: 8px;
+            background:
+                linear-gradient(135deg, #3c3d45 0%, #191a20 55%, #0b0b0e 100%);
+            box-shadow:
+                inset 0 0 44px rgba(0,0,0,0.55),
+                inset 0 2px 3px rgba(255,255,255,0.09);
+        }
+        .board-top::after {
+            content: '';
+            position: absolute;
+            inset: 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(201,168,76,0.14);
+        }
+
+        .mortar-button {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 18px; height: 18px;
+            margin: -9px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%, var(--gold-2), var(--gold) 60%, #9c7f34);
+            box-shadow: 0 0 14px rgba(201,168,76,0.7);
+            z-index: 5;
+        }
+
+        /* tassel cord lying across the board */
+        .tassel-cord {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 62px; height: 3px;
+            margin-top: -1.5px;
+            transform-origin: left center;
+            background: linear-gradient(90deg, var(--gold), var(--gold-2));
+            border-radius: 3px;
+            z-index: 4;
+            box-shadow: 0 0 8px rgba(201,168,76,0.5);
+        }
+        /* hanging tassel fringe at the board corner */
+        .tassel-drop {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(58px, -2px);
+            transform-style: preserve-3d;
+            z-index: 4;
+        }
+        .tassel-knot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: var(--gold-2);
+            box-shadow: 0 0 10px rgba(201,168,76,0.6);
+        }
+        .tassel-fringe {
+            width: 8px; height: 34px;
+            margin-left: 0.5px;
+            background: linear-gradient(var(--gold-2), var(--gold), #a5852f);
+            border-radius: 0 0 4px 4px;
+            transform-origin: top center;
+            transform: rotateX(-90deg);
+            animation: tasselSwing 3.5s ease-in-out infinite;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.4);
+        }
+        @keyframes tasselSwing {
+            0%,100% { transform: rotateX(-90deg) rotate(-7deg); }
+            50%     { transform: rotateX(-90deg) rotate(7deg); }
+        }
+
+        /* soft ground shadow under each cap */
+        .cap-shadow {
+            width: 96px; height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.5), transparent 72%);
+            filter: blur(3px);
+            animation: shadowPulse 9s ease-in-out infinite;
+        }
+        @keyframes shadowPulse {
+            0%,100% { transform: scale(1);   opacity: 0.55; }
+            50%     { transform: scale(0.82); opacity: 0.35; }
+        }
+
+        .cap-label {
+            font-size: 10px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: rgba(201,168,76,0.55);
+            font-weight: 600;
+        }
+
+        /* ── Section shells ── */
+        .about-section  { position: relative; background: #eef1f6; padding: 110px 60px; }
+        .contact-section{ position: relative; padding: 100px 60px;
+            background:
+                radial-gradient(100% 100% at 100% 0%, #123056 0%, transparent 55%),
+                linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 100%); }
+        .data-section   { background: #eef1f6; padding: 84px 60px; }
+
+        .section-head { text-align: center; margin-bottom: 8px; }
+
+        .section-tag {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--navy);
+            line-height: 1.2;
+            text-align: center;
+        }
+        .section-title.light { color: var(--cream); }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 52px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-2));
+            margin: 18px auto 0;
+            border-radius: 2px;
+        }
+
+        /* ── About ── */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+            margin-top: 60px;
+            max-width: 1180px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .about-desc {
+            font-size: 16.5px;
+            line-height: 1.95;
+            color: #445;
+            font-weight: 300;
+        }
+        .about-desc strong { color: var(--navy); font-weight: 600; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            perspective: 1000px;
+        }
+
+        .stat-card {
+            position: relative;
+            background: linear-gradient(150deg, #ffffff, #f4f6fb);
+            border-radius: 16px;
+            padding: 30px 24px;
+            border: 1px solid rgba(12,31,63,0.06);
+            box-shadow: 0 10px 30px rgba(12,31,63,0.08), inset 0 1px 0 #fff;
+            transform-style: preserve-3d;
+            transition: transform 0.15s ease, box-shadow 0.25s ease;
+            will-change: transform;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(150deg, rgba(201,168,76,0.5), transparent 60%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .stat-card:hover { box-shadow: 0 26px 60px rgba(12,31,63,0.18), inset 0 1px 0 #fff; }
+        .stat-card:hover::before { opacity: 1; }
+
+        .stat-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 44px;
+            font-weight: 800;
+            color: var(--navy);
+            line-height: 1;
+            margin-bottom: 8px;
+            transform: translateZ(40px);
+        }
+        .stat-number span {
+            background: linear-gradient(120deg, var(--gold-2), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: #8a92a3;
+            transform: translateZ(24px);
+        }
+
+        /* ── Contact ── */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 26px;
+            margin-top: 58px;
+            max-width: 1180px;
+            margin-left: auto;
+            margin-right: auto;
+            perspective: 1100px;
+        }
+
+        .contact-card {
+            position: relative;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(201,168,76,0.2);
+            border-radius: 16px;
+            padding: 38px 30px;
+            backdrop-filter: blur(6px);
+            transform-style: preserve-3d;
+            transition: transform 0.15s ease, background 0.25s, border-color 0.25s, box-shadow 0.25s;
+            will-change: transform;
+        }
+        .contact-card:hover {
+            background: rgba(201,168,76,0.08);
+            border-color: rgba(201,168,76,0.5);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+        }
+
+        .contact-icon-wrap {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(150deg, rgba(201,168,76,0.22), rgba(201,168,76,0.05));
+            border: 1px solid rgba(201,168,76,0.3);
+            margin-bottom: 22px;
+            transform: translateZ(38px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+        }
+        .contact-icon { width: 26px; height: 26px; color: var(--gold-2); }
+
+        .contact-card-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(240,236,227,0.42);
+            margin-bottom: 10px;
+            transform: translateZ(28px);
+        }
+        .contact-card-value {
+            font-size: 15px;
+            color: var(--cream);
+            font-weight: 300;
+            line-height: 1.7;
+            transform: translateZ(20px);
+        }
+
+        /* ── Universities Section ── */
+        .universities-section {
+            background: #eef1f6;
+            padding: 0;         /* banner card is flush against the hero */
+        }
+
+        .unis-inner {
+            padding: 60px 60px 84px;
+        }
+
+        /* ── Country Banner Card (full-width, sits right below hero) ── */
+        /* This is the "country image" — a gradient panel that feels like a
+           landscape photo overlay, with flag + landmark + description + stats */
+        .country-banner-full {
+            position: relative;
+            overflow: hidden;
+            min-height: 230px;
+        }
+
+        /* The colour gradient — changes per country via JS */
+        .cbf-bg {
+            position: absolute; inset: 0;
+            background: linear-gradient(160deg, #091833 0%, #0c2044 50%, #0a1528 100%);
+            transition: background 0.9s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        /* Dot-grid texture on top of the gradient */
+        .cbf-bg::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.055) 1.5px, transparent 1.5px);
+            background-size: 26px 26px;
+        }
+
+        /* Fade to dark at the bottom, keeps text on light bg readable */
+        .cbf-bg::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(0,0,0,0.72) 0%,
+                rgba(0,0,0,0.36) 50%,
+                rgba(0,0,0,0.55) 100%
+            );
+        }
+
+        /* Decorative gold glow in the top-right corner */
+        .cbf-gloss {
+            position: absolute;
+            top: -100px; right: -80px;
+            width: 420px; height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201,168,76,0.14) 0%, transparent 68%);
+            pointer-events: none;
+        }
+
+        /* 3-column grid: flag+name | description | stats */
+        .cbf-inner {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 260px 1fr 240px;
+            gap: 0;
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 50px 60px;
+            align-items: center;
+            min-height: 230px;
+        }
+
+        .cbf-left {
+            border-right: 1px solid rgba(255,255,255,0.10);
+            padding-right: 44px;
+        }
+
+        .cbf-flag {
+            font-size: 56px;
+            line-height: 1;
+            display: block;
+            margin-bottom: 14px;
+            filter: drop-shadow(0 4px 16px rgba(0,0,0,0.55));
+            transition: transform 0.4s ease;
+        }
+
+        .cbf-country {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .cbf-landmark {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+
+        .cbf-mid {
+            padding: 0 44px;
+            border-right: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .cbf-tagline {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(240,236,227,0.4);
+            margin-bottom: 12px;
+        }
+
+        .cbf-desc {
+            font-size: 14px;
+            line-height: 1.88;
+            color: rgba(240,236,227,0.72);
+            font-weight: 300;
+        }
+
+        .cbf-right {
+            padding-left: 44px;
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        /* Each stat is a dot + text */
+        .cbf-stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12.5px;
+            color: rgba(240,236,227,0.78);
+            font-weight: 400;
+        }
+        .cbf-stat-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--gold);
+            flex-shrink: 0;
+        }
+
+        /* Gold gradient text for the country name in the section heading */
+        .pref-country-name {
+            background: linear-gradient(120deg, var(--gold-2), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* The preferred-country block */
+        .preferred-block { margin-bottom: 72px; }
+
+        /* Explorer section: sits below preferred with a divider */
+        .country-explorer {
+            border-top: 1px solid rgba(12,31,63,0.08);
+            padding-top: 72px;
+        }
+
+        /* Explorer banner shown after picking a destination card */
+        .explorer-banner-wrap { margin-bottom: 48px; }
+
+        /* ── Destination Card Grid ─────────────────────────────────────────── */
+        /* The visual grid of all 10 countries — what the user sees immediately */
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 18px;
+            max-width: 1180px;
+            margin: 44px auto 0;
+        }
+
+        .dest-card {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            height: 170px;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+        }
+        .dest-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 18px 44px rgba(0,0,0,0.3);
+        }
+        /* Highlighted when clicked */
+        .dest-card.active {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(201,168,76,0.22), 0 18px 44px rgba(0,0,0,0.3);
+        }
+        /* Preferred country card gets a subtle gold ring by default */
+        .dest-card.is-preferred {
+            border-color: rgba(201,168,76,0.45);
+        }
+
+        /* The gradient background (set per-country by JS) */
+        .dest-bg {
+            position: absolute; inset: 0;
+            background: linear-gradient(160deg, #091833, #0c1f3f);
+            transition: background 0.6s ease;
+        }
+        .dest-bg::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.06) 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+        }
+        /* Dark fade at bottom so text is always readable */
+        .dest-bg::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.12) 100%);
+        }
+
+        .dest-inner {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px 18px 18px;
+        }
+
+        .dest-flag {
+            font-size: 34px;
+            line-height: 1;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.55));
+        }
+        .dest-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+        .dest-tagline {
+            font-size: 9.5px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+        /* "Your Pick" badge on the preferred country card */
+        .dest-badge {
+            position: absolute;
+            top: 12px; right: 12px;
+            background: linear-gradient(135deg, var(--gold-2), var(--gold));
+            color: var(--navy);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 3px 9px;
+            border-radius: 20px;
+            z-index: 3;
+        }
+
+        /* Styled native select — arrow injected via background-image */
+        .country-dropdown {
+            padding: 14px 44px 14px 20px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            border: 2px solid rgba(12,31,63,0.12);
+            border-radius: 10px;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230c1f3f' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center;
+            appearance: none;
+            -webkit-appearance: none;
+            color: var(--navy);
+            min-width: 320px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .country-dropdown:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+        }
+
+        /* Responsive card grid — fills the row with 300px minimum cards */
+        .uni-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        .uni-card {
+            position: relative;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid rgba(12,31,63,0.07);
+            box-shadow: 0 8px 28px rgba(12,31,63,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .uni-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(12,31,63,0.14);
+        }
+
+        /* Gold pill in the top-right corner showing #rank */
+        .uni-rank-badge {
+            position: absolute;
+            top: 16px; right: 16px;
+            background: linear-gradient(135deg, var(--gold-2), var(--gold));
+            color: var(--navy);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .uni-card-body { padding: 28px 24px 16px; flex: 1; }
+
+        .uni-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 10px;
+            line-height: 1.3;
+            padding-right: 44px; /* leaves room for the rank badge */
+        }
+
+        /* City line with a pin SVG icon */
+        .uni-city {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #7a8499;
+            margin-bottom: 14px;
+        }
+
+        /* Small pill link showing the domain */
+        /* Fee line — shown in muted green */
+        .uni-fee {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 8px;
+        }
+
+        /* Scholarship line — gold star icon */
+        .uni-scholarship {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 12px;
+            color: #6b5900;
+            background: rgba(201,168,76,0.08);
+            border: 1px solid rgba(201,168,76,0.25);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .uni-scholarship svg { flex-shrink: 0; margin-top: 2px; color: var(--gold); }
+
+        .uni-website {
+            display: inline-block;
+            font-size: 12px;
+            color: var(--gold);
+            text-decoration: none;
+            border: 1px solid rgba(201,168,76,0.4);
+            padding: 3px 10px;
+            border-radius: 20px;
+            transition: all 0.2s;
+            word-break: break-all;
+        }
+        .uni-website:hover {
+            background: rgba(201,168,76,0.08);
+            border-color: var(--gold);
+        }
+
+        .uni-card-footer {
+            padding: 16px 24px 22px;
+            border-top: 1px solid rgba(12,31,63,0.06);
+        }
+
+        /* Full-width navy Apply button */
+        .uni-apply-btn {
+            display: block;
+            text-align: center;
+            padding: 11px 0;
+            background: linear-gradient(135deg, var(--navy), #1a3560);
+            color: var(--gold-2);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(12,31,63,0.2);
+        }
+        .uni-apply-btn:hover {
+            background: linear-gradient(135deg, #1a3560, var(--navy));
+            color: var(--gold);
+            box-shadow: 0 8px 24px rgba(12,31,63,0.3);
+            transform: translateY(-1px);
+        }
+
+        .uni-empty {
+            text-align: center;
+            padding: 50px 30px;
+            color: #8a92a3;
+            font-size: 15px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 12px;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        /* Spinning gold ring shown while the fetch is in-flight */
+        .loading-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(201,168,76,0.2);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 940px) {
+            .unis-inner { padding: 44px 22px 60px; }
+            .cbf-inner { grid-template-columns: 1fr; padding: 36px 22px; gap: 24px; }
+            .cbf-left, .cbf-mid { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding-right: 0; padding-bottom: 24px; }
+            .cbf-mid { padding: 0 0 24px; }
+            .cbf-right { padding-left: 0; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+            .cbf-stat { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); border-radius: 20px; padding: 4px 12px; }
+            .cbf-stat-dot { display: none; }
+            .destinations-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .dest-card { height: 140px; }
+            .uni-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Data Table ── */
+        .data-section table {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(12,31,63,0.12);
+            border: 1px solid #e5e9f0;
+            margin: 40px auto 0;
+            max-width: 1180px;
+        }
+        .data-section thead {
+            background: linear-gradient(120deg, var(--navy), #123056);
+        }
+
+        /* ── Footer ── */
+        .edu-footer {
+            background: #060e1c;
+            text-align: center;
+            padding: 26px;
+            font-size: 12px;
+            color: rgba(240,236,227,0.3);
+            letter-spacing: 1px;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(34px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 940px) {
+            .edu-nav { padding: 0 24px; }
+            .hero-section { flex-direction: column; padding: 70px 24px 90px; text-align: center; }
+            .hero-text { text-align: center; }
+            .hero-title { font-size: 40px; }
+            .caps-stage { gap: 8px; transform: scale(0.82); }
+            .about-section, .contact-section, .data-section { padding: 70px 22px; }
+            .about-grid { grid-template-columns: 1fr; gap: 44px; }
+            .contact-grid { grid-template-columns: 1fr; }
+            .section-title { font-size: 32px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tassel-fringe, .orb, .cap-shadow { animation: none; }
+            .cap-3d { transform: rotateX(58deg) rotateZ(35deg) !important; }
+        }
+    </style>
+</head>
+<body class="dashboard-page">
+
+<!-- Navbar -->
+<nav class="edu-nav">
+    <div class="edu-logo">
+        <span class="cap-h">H</span>igher<span class="cap-e">E</span>DU
+    </div>
+    <a href="/logout" class="btn nav-logout">Logout</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero-section">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="hero-text">
+        <span class="hero-eyebrow">Overseas Education Platform</span>
+        <h1 class="hero-title">Your Path to<br><span class="accent">Global Education</span></h1>
+        <p class="hero-desc">
+            HigherEDU is an overseas platform where you can choose your higher
+            education plans and study plans. We connect students with the right
+            universities, courses, and countries — guiding every step of the journey.
+        </p>
+    </div>
+
+    <!-- Three spinning 3D mortarboard caps (no human figures) -->
+    <div class="caps-stage">
+
+        <div class="cap-scene">
+            <div class="cap-3d">
+                <div class="mortar-cap"></div>
+                <div class="board-layer" style="transform:translateZ(-2px)"></div>
+                <div class="board-layer" style="transform:translateZ(-5px)"></div>
+                <div class="board-layer" style="transform:translateZ(-9px)"></div>
+                <div class="board-layer" style="transform:translateZ(-13px)"></div>
+                <div class="board-top">
+                    <span class="tassel-cord"></span>
+                    <span class="mortar-button"></span>
+                    <span class="tassel-drop">
+                        <span class="tassel-knot"></span>
+                        <span class="tassel-fringe"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="cap-shadow"></div>
+            <span class="cap-label">Bachelors</span>
+        </div>
+
+        <div class="cap-scene raised">
+            <div class="cap-3d">
+                <div class="mortar-cap"></div>
+                <div class="board-layer" style="transform:translateZ(-2px)"></div>
+                <div class="board-layer" style="transform:translateZ(-5px)"></div>
+                <div class="board-layer" style="transform:translateZ(-9px)"></div>
+                <div class="board-layer" style="transform:translateZ(-13px)"></div>
+                <div class="board-top">
+                    <span class="tassel-cord"></span>
+                    <span class="mortar-button"></span>
+                    <span class="tassel-drop">
+                        <span class="tassel-knot"></span>
+                        <span class="tassel-fringe"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="cap-shadow"></div>
+            <span class="cap-label">Masters</span>
+        </div>
+
+        <div class="cap-scene">
+            <div class="cap-3d">
+                <div class="mortar-cap"></div>
+                <div class="board-layer" style="transform:translateZ(-2px)"></div>
+                <div class="board-layer" style="transform:translateZ(-5px)"></div>
+                <div class="board-layer" style="transform:translateZ(-9px)"></div>
+                <div class="board-layer" style="transform:translateZ(-13px)"></div>
+                <div class="board-top">
+                    <span class="tassel-cord"></span>
+                    <span class="mortar-button"></span>
+                    <span class="tassel-drop">
+                        <span class="tassel-knot"></span>
+                        <span class="tassel-fringe"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="cap-shadow"></div>
+            <span class="cap-label">PhD</span>
+        </div>
+
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     UNIVERSITIES SECTION — first thing student sees after hero.
+     Structure:
+       1. Country Banner (full-width dark card with gradient per country)
+       2. University cards for the preferred country
+       3. Country Explorer dropdown + banner + dynamic cards
+     The preferred country block is server-rendered (Jinja).
+     The explorer is JS-powered (fetch API, no page reload).
+════════════════════════════════════════════════════════════════ -->
+<section class="universities-section">
+
+    <!-- ── Part 1 & 2: Preferred Country (only when student has a country set) -->
+    {% if preferred_country %}
+    <div class="country-banner-full" id="prefBannerFull">
+        <div class="cbf-bg" id="prefBannerBg"></div>
+        <div class="cbf-gloss"></div>
+        <div class="cbf-inner">
+            <div class="cbf-left">
+                <span class="cbf-flag" id="prefFlag">🌍</span>
+                <div class="cbf-country">{{ preferred_country }}</div>
+                <div class="cbf-landmark" id="prefLandmark">Your Preferred Destination</div>
+            </div>
+            <div class="cbf-mid">
+                <div class="cbf-tagline" id="prefTagline">—</div>
+                <p class="cbf-desc" id="prefDesc">Your personalised university recommendations are listed below.</p>
+            </div>
+            <div class="cbf-right" id="prefStats"></div>
+        </div>
+    </div>
+    <div class="unis-inner">
+        <div class="preferred-block">
+            <div class="section-head">
+                <p class="section-tag">Your Preferred Destination</p>
+                <h2 class="section-title">
+                    Universities in
+                    <span class="pref-country-name">{{ preferred_country }}</span>
+                </h2>
+            </div>
+
+            {% if preferred_unis %}
+            <div class="uni-grid" style="margin-top:44px;">
+                {% for u in preferred_unis %}
+                {# u[0]=id u[1]=name u[2]=website u[3]=ranking u[4]=city u[5]=country u[6]=tuition u[7]=scholarship #}
+                {% set raw_url = u[2] or '' %}
+                {% set href = raw_url if raw_url.startswith('http') else ('https://' + raw_url if raw_url else '#') %}
+                <div class="uni-card">
+                    {% if u[3] %}<div class="uni-rank-badge">#{{ u[3] }}</div>{% endif %}
+                    <div class="uni-card-body">
+                        <h3 class="uni-name">{{ u[1] }}</h3>
+                        <div class="uni-city">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {{ u[4] }}, {{ u[5] }}
+                        </div>
+                        {% if u[6] %}
+                        <div class="uni-fee">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                            ~${{ "{:,}".format(u[6]) }} / yr
+                        </div>
+                        {% endif %}
+                        {% if u[7] %}
+                        <div class="uni-scholarship">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            {{ u[7] }}
+                        </div>
+                        {% endif %}
+                        {% if raw_url %}
+                        <a href="{{ href }}" class="uni-website" target="_blank" rel="noopener">{{ raw_url }}</a>
+                        {% endif %}
+                    </div>
+                    <div class="uni-card-footer">
+                        <a href="{{ href }}" class="uni-apply-btn" target="_blank" rel="noopener">Apply Now →</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="uni-empty" style="margin-top:40px;">
+                No universities listed for <strong>{{ preferred_country }}</strong> yet —
+                browse other countries below or ask your counsellor to add them.
+            </p>
+            {% endif %}
+        </div><!-- /preferred-block -->
+    </div><!-- /unis-inner preferred -->
+    {% endif %}
+
+    <!-- ── Part 3: All Destinations Grid — always visible, no conditional wrapper ──
+         Shows every country that has colleges as a clickable visual tile.
+         Clicking a tile loads that country's banner and universities below.
+    ──────────────────────────────────────────────────────────────────────────── -->
+    <div class="unis-inner">
+        <div class="country-explorer">
+            <div class="section-head">
+                <p class="section-tag">All Destinations</p>
+                <h2 class="section-title">Explore by Country</h2>
+            </div>
+
+            <!-- Destination card grid — one card per country in DB -->
+            <div class="destinations-grid" id="destGrid">
+                {% for c in other_countries %}
+                <div class="dest-card {% if c[1]|lower == preferred_country|lower %}is-preferred{% endif %}"
+                     data-id="{{ c[0] }}"
+                     data-name="{{ c[1] }}">
+                    <div class="dest-bg" id="destBg_{{ c[0] }}"></div>
+                    {% if c[1]|lower == preferred_country|lower %}
+                    <div class="dest-badge">Your Pick</div>
+                    {% endif %}
+                    <div class="dest-inner">
+                        <div class="dest-flag" id="destFlag_{{ c[0] }}">🌍</div>
+                        <div class="dest-name">{{ c[1] }}</div>
+                        <div class="dest-tagline" id="destTag_{{ c[0] }}">—</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Explorer country banner — slides in when a tile is clicked -->
+            <div class="explorer-banner-wrap" id="explorerBannerWrap" style="display:none; margin-top:48px;">
+                <div class="country-banner-full">
+                    <div class="cbf-bg" id="expBannerBg"></div>
+                    <div class="cbf-gloss"></div>
+                    <div class="cbf-inner">
+                        <div class="cbf-left">
+                            <span class="cbf-flag" id="expFlag">🌍</span>
+                            <div class="cbf-country" id="expName"></div>
+                            <div class="cbf-landmark" id="expLandmark"></div>
+                        </div>
+                        <div class="cbf-mid">
+                            <div class="cbf-tagline" id="expTagline"></div>
+                            <p class="cbf-desc" id="expDesc"></p>
+                        </div>
+                        <div class="cbf-right" id="expStats"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spinner while fetch is in-flight -->
+            <div id="uni-loading" style="display:none; text-align:center; padding:40px;">
+                <div class="loading-spinner"></div>
+            </div>
+
+            <!-- Empty state -->
+            <p id="uni-empty" class="uni-empty" style="display:none;">
+                No universities listed for this country yet.
+            </p>
+
+            <!-- University cards injected here by JS after tile click -->
+            <div id="dynamic-unis" class="uni-grid" style="display:none; margin-top:40px;"></div>
+        </div><!-- /country-explorer -->
+    </div><!-- /unis-inner explorer -->
+
+</section>
+
+<!-- About -->
+<section class="about-section">
+    <div class="section-head">
+        <p class="section-tag">Who We Are</p>
+        <h2 class="section-title">About HigherEDU</h2>
+    </div>
+    <div class="about-grid">
+        <p class="about-desc">
+            We have been in the overseas education industry for <strong>5 years</strong>,
+            successfully processing thousands of student applications with a high visa
+            acceptance rate. We help students find the right course, university, and
+            country for their future.<br><br>
+            Our experienced counsellors guide you through every step — from shortlisting
+            universities to visa documentation, pre-departure briefings, and ongoing
+            support once you arrive. Your dream education is our mission.
+        </p>
+        <div class="stats-grid">
+            <div class="stat-card tilt">
+                <div class="stat-number">5<span>+</span></div>
+                <div class="stat-label">Years in Business</div>
+            </div>
+            <div class="stat-card tilt">
+                <div class="stat-number">10<span>k+</span></div>
+                <div class="stat-label">Students Processed</div>
+            </div>
+            <div class="stat-card tilt">
+                <div class="stat-number">95<span>%</span></div>
+                <div class="stat-label">Visa Acceptance Rate</div>
+            </div>
+            <div class="stat-card tilt">
+                <div class="stat-number">40<span>+</span></div>
+                <div class="stat-label">Partner Universities</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact -->
+<section class="contact-section">
+    <div class="section-head">
+        <p class="section-tag">Get In Touch</p>
+        <h2 class="section-title light">Contact Us</h2>
+    </div>
+    <div class="contact-grid">
+        <div class="contact-card tilt">
+            <div class="contact-icon-wrap">
+                <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="M2 8l10 6 10-6"/>
+                </svg>
+            </div>
+            <div class="contact-card-title">Email</div>
+            <div class="contact-card-value">info@higheredu.com<br>support@higheredu.com</div>
+        </div>
+        <div class="contact-card tilt">
+            <div class="contact-icon-wrap">
+                <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+                </svg>
+            </div>
+            <div class="contact-card-title">Phone</div>
+            <div class="contact-card-value">+1 (800) 123-4567<br>Mon – Fri, 9am – 6pm</div>
+        </div>
+        <div class="contact-card tilt">
+            <div class="contact-icon-wrap">
+                <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+            </div>
+            <div class="contact-card-title">Address</div>
+            <div class="contact-card-value">42 Education Lane, Suite 300<br>New York, NY 10001, USA</div>
+        </div>
+    </div>
+</section>
+
+<!-- Student Data Table -->
+{% if students %}
+<section class="data-section">
+    <div class="section-head">
+        <p class="section-tag">Student Records</p>
+        <h2 class="section-title">All Students</h2>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Photo</th><th>Name</th><th>Email</th><th>Student ID</th>
+                <th>Level</th><th>Country</th><th>Course</th><th>Registered</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>
+                    {% if s[7] %}
+                        <img src="{{ url_for('static', filename='uploads/' + s[7]) }}" class="student-img">
+                    {% else %}
+                        <div class="no-img">N/A</div>
+                    {% endif %}
+                </td>
+                <td>{{ s[1] }}</td><td>{{ s[2] }}</td><td>{{ s[3] }}</td>
+                <td>{{ s[4] }}</td><td>{{ s[5] }}</td><td>{{ s[6] }}</td>
+                <td>{{ s[8].strftime('%d %b %Y') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+<footer class="edu-footer">
+    &copy; 2024 HigherEDU — All rights reserved
+</footer>
+
+<script>
+    // Scroll-reactive 3D graduation caps + idle float
+    (function () {
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) return;
+
+        var caps = Array.prototype.slice.call(document.querySelectorAll('.cap-3d'));
+        // each cap spins at a slightly different rate for a layered feel
+        var spinFactor = [0.55, 0.75, 0.45];  // degrees of rotation per px scrolled
+        var idleSpeed  = [10, 14, 8];         // gentle degrees per second when still
+        var start = performance.now();
+
+        function render(now) {
+            var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+            var t = (now - start) / 1000; // seconds
+            for (var i = 0; i < caps.length; i++) {
+                // rotation = scroll-driven spin  +  slow idle drift
+                var rot = scrollY * spinFactor[i] + t * idleSpeed[i];
+                // caps gently rise as you scroll down, then settle
+                var lift = Math.sin(scrollY / 220 + i) * 12;
+                caps[i].style.transform =
+                    'rotateX(58deg) rotateZ(' + rot + 'deg) translateZ(' + lift + 'px)';
+            }
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+    })();
+
+    // ── Country data ─────────────────────────────────────────────────────────
+    // Matches the same list used on the registration page.
+    // gradient: CSS string applied to .cbf-bg for that country's banner.
+    // stats: 4 bullet points shown on the right side of the banner.
+    var CDATA = {
+        'United States': {
+            flag:'🇺🇸', landmark:'Statue of Liberty · New York City',
+            tagline:'Land of Endless Opportunity',
+            desc:'Home to 30+ of the world\'s top-100 universities including MIT, Harvard, and Stanford. The USA offers cutting-edge research, vibrant campus life, and an OPT visa for 1–3 years of post-study work.',
+            gradient:'linear-gradient(160deg,#091840 0%,#0d2a72 35%,#6b0000 70%,#b01b1b 100%)',
+            stats:['30+ Global Top-100 Unis','1M+ International Students','OPT Work Visa 1–3 yr','Avg Scholarships $45k+']
+        },
+        'United Kingdom': {
+            flag:'🇬🇧', landmark:'Big Ben · Westminster, London',
+            tagline:'Where Tradition Meets Innovation',
+            desc:'Oxford, Cambridge, and Imperial sit in the global top 10. Bachelor\'s degrees take just 3 years, and the Graduate Route visa lets you stay and work for 2 years. Chevening Scholarships cover full tuition.',
+            gradient:'linear-gradient(160deg,#0b1333 0%,#16256e 40%,#380a78 72%,#5614a0 100%)',
+            stats:['18 World Top-100 Unis','3-Year Bachelor\'s Degree','2yr Graduate Visa','Chevening Scholarship']
+        },
+        'Canada': {
+            flag:'🇨🇦', landmark:'CN Tower · Toronto, Ontario',
+            tagline:'Study, Stay & Build a Future',
+            desc:'Canada combines world-class universities like U of T and UBC with a clear PR pathway. It\'s multicultural, safe, and affordable — the PGWP lets you work for up to 3 years after graduation.',
+            gradient:'linear-gradient(160deg,#6b0000 0%,#b01b1b 35%,#0b3318 65%,#145228 100%)',
+            stats:['U of T Global Top 25','PGWP Up to 3 Years','PR Pathway Available','Avg Tuition $21–34k']
+        },
+        'Australia': {
+            flag:'🇦🇺', landmark:'Sydney Opera House · New South Wales',
+            tagline:'World-Class Education Down Under',
+            desc:'Eight Australian universities sit in the global top 100. The Temporary Graduate visa grants 2–4 years of post-study work rights, and a permanent residency pathway is available.',
+            gradient:'linear-gradient(160deg,#5c2500 0%,#b04800 38%,#092264 68%,#0d3a9e 100%)',
+            stats:['8 Global Top-100 Unis','2–4yr Post-Study Visa','PR Pathway Available','Avg Tuition $28–32k']
+        },
+        'Switzerland': {
+            flag:'🇨🇭', landmark:'Matterhorn · Swiss Alps, Valais',
+            tagline:'Excellence in the Heart of Europe',
+            desc:'ETH Zurich (#7 globally) and EPFL charge just CHF 730/yr — among the lowest tuition for elite universities worldwide. Switzerland sits near CERN, the UN, and hundreds of global firms.',
+            gradient:'linear-gradient(160deg,#6b0000 0%,#b01b1b 38%,#334a57 68%,#4a6475 100%)',
+            stats:['ETH Zurich #7 Global','Fees from CHF 730/yr','CERN & UN Proximity','Excellence Scholarship']
+        },
+        'Germany': {
+            flag:'🇩🇪', landmark:'Brandenburg Gate · Berlin',
+            tagline:'Free Education, World-Class Research',
+            desc:'Public universities in Germany charge almost no tuition — typically €100–300/semester in admin fees. TU Munich, LMU, and Heidelberg rank globally. DAAD offers generous scholarships.',
+            gradient:'linear-gradient(160deg,#111111 0%,#2c2c2c 38%,#6b0000 68%,#b01b1b 100%)',
+            stats:['Tuition ~€200/semester','TU Munich Top 40','DAAD Scholarships','40+ Nobel Prize Winners']
+        },
+        'Netherlands': {
+            flag:'🇳🇱', landmark:'Windmills · Kinderdijk, South Holland',
+            tagline:'Gateway to Europe',
+            desc:'Delft, Amsterdam, and Leiden rank in the global top 60. Over 90% of Dutch programmes are taught in English. The Holland Scholarship offers €5,000 to incoming international students.',
+            gradient:'linear-gradient(160deg,#6b0000 0%,#b01b1b 30%,#c05000 55%,#0a1f6e 80%,#1565c0 100%)',
+            stats:['Top 5 Universities in EU','90%+ English Programs','Holland Scholarship €5k','TU Delft Top 50']
+        },
+        'New Zealand': {
+            flag:'🇳🇿', landmark:'Fiordland National Park · South Island',
+            tagline:'Study in Nature\'s Masterpiece',
+            desc:'New Zealand offers safe, breathtaking campuses and globally ranked universities. The University of Auckland sits in the world\'s top 70, and the post-study work visa lasts up to 3 years.',
+            gradient:'linear-gradient(160deg,#08321a 0%,#14572c 40%,#082060 70%,#0e3498 100%)',
+            stats:['UoA Global Top 70','3yr Post-Study Visa','PR Pathway Available','Safe & Welcoming']
+        },
+        'Ireland': {
+            flag:'🇮🇪', landmark:'Cliffs of Moher · County Clare',
+            tagline:'Tech Capital of Europe',
+            desc:'Google, Apple, Meta, and Microsoft chose Ireland as their European HQ. As the only English-speaking EU country, it\'s the strategic gateway to Europe. Trinity College ranks in the global top 100.',
+            gradient:'linear-gradient(160deg,#0b3518 0%,#145c2a 40%,#5a3000 70%,#9e5400 100%)',
+            stats:['EU English-Speaking','Tech Giants HQ Here','Trinity Top 100','2yr Stay-Back Visa']
+        },
+        'Sweden': {
+            flag:'🇸🇪', landmark:'Northern Lights · Lapland',
+            tagline:'Innovation Meets Sustainability',
+            desc:'Sweden is one of the world\'s most innovative countries. KTH, Lund, and Uppsala lead in tech, sustainability, and medicine. The Swedish Institute Scholarship provides generous funding.',
+            gradient:'linear-gradient(160deg,#08174e 0%,#0e2a8a 40%,#5c3c00 70%,#c99200 100%)',
+            stats:['KTH Global Top 100','SI Scholarship Full Fund','Innovation World Leader','Sustainability Focus']
+        }
+    };
+
+    // ── Render a country banner ───────────────────────────────────────────────
+    // Takes the country name string and a set of element IDs, then fills in
+    // gradient, flag, landmark, tagline, description, and stat bullets.
+    function renderBanner(countryName, ids) {
+        var d = CDATA[countryName];
+        if (!d) return;
+
+        document.getElementById(ids.bg).style.background = d.gradient;
+        document.getElementById(ids.flag).textContent    = d.flag;
+        document.getElementById(ids.landmark).textContent = d.landmark;
+        document.getElementById(ids.tagline).textContent  = d.tagline;
+        document.getElementById(ids.desc).textContent     = d.desc;
+
+        document.getElementById(ids.stats).innerHTML = d.stats.map(function(s) {
+            return '<div class="cbf-stat"><div class="cbf-stat-dot"></div>' + s + '</div>';
+        }).join('');
+    }
+
+    // ── Preferred country banner: render immediately on page load ─────────────
+    // preferred_country comes from Flask/Jinja as a JS string literal.
+    var PREF_COUNTRY = '{{ preferred_country | e }}';
+    if (PREF_COUNTRY) {
+        renderBanner(PREF_COUNTRY, {
+            bg: 'prefBannerBg', flag: 'prefFlag', landmark: 'prefLandmark',
+            tagline: 'prefTagline', desc: 'prefDesc', stats: 'prefStats'
+        });
+    }
+
+    // ── Destination cards: set per-country gradients + text on page load ────────
+    // Each .dest-card has data-name matching keys in CDATA.
+    // We set the gradient background and tagline for every card immediately.
+    (function () {
+        document.querySelectorAll('.dest-card').forEach(function (card) {
+            var name = card.dataset.name;
+            var d    = CDATA[name];
+            if (!d) return;
+            var bg = document.getElementById('destBg_' + card.dataset.id);
+            if (bg) bg.style.background = d.gradient;
+            var flagEl = document.getElementById('destFlag_' + card.dataset.id);
+            if (flagEl) flagEl.textContent = d.flag;
+            var tagEl = document.getElementById('destTag_' + card.dataset.id);
+            if (tagEl) tagEl.textContent = d.tagline;
+        });
+    })();
+
+    // ── Destination tile click: show banner + load universities ───────────────
+    // Clicking a country tile:
+    //   1. Marks it active (gold border)
+    //   2. Renders its country banner (gradient + flag + description + stats)
+    //   3. Fetches /api/universities/by-country/<id> and builds cards below
+    (function () {
+        var grid    = document.getElementById('dynamic-unis');
+        var loading = document.getElementById('uni-loading');
+        var empty   = document.getElementById('uni-empty');
+
+        // Helper: turn a bare domain like "mu.ac.in" into "https://mu.ac.in"
+        function toHref(url) {
+            if (!url) return '#';
+            return url.startsWith('http') ? url : 'https://' + url;
+        }
+
+        // Builds the HTML string for one university card
+        function buildCard(u) {
+            var href = toHref(u.website);
+            var rankBadge = u.ranking
+                ? '<div class="uni-rank-badge">#' + u.ranking + '</div>' : '';
+            var feeHtml = u.tuition_fee_usd
+                ? '<div class="uni-fee"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>~$' + Number(u.tuition_fee_usd).toLocaleString() + ' / yr</div>' : '';
+            var scholarshipHtml = u.scholarship_info
+                ? '<div class="uni-scholarship"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' + u.scholarship_info + '</div>' : '';
+            var websiteLink = u.website
+                ? '<a href="' + href + '" class="uni-website" target="_blank" rel="noopener">' + u.website + '</a>' : '';
+            return '<div class="uni-card">' + rankBadge +
+                '<div class="uni-card-body"><h3 class="uni-name">' + u.name + '</h3>' +
+                '<div class="uni-city"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' + u.city + ', ' + u.country + '</div>' +
+                feeHtml + scholarshipHtml + websiteLink + '</div>' +
+                '<div class="uni-card-footer"><a href="' + href + '" class="uni-apply-btn" target="_blank" rel="noopener">Apply Now →</a></div></div>';
+        }
+
+        document.querySelectorAll('.dest-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                var countryId   = this.dataset.id;
+                var countryName = this.dataset.name;
+
+                // Mark this card active, remove from others
+                document.querySelectorAll('.dest-card').forEach(function (c) {
+                    c.classList.remove('active');
+                });
+                this.classList.add('active');
+
+                // Reset results area
+                grid.style.display  = 'none';
+                grid.innerHTML      = '';
+                empty.style.display = 'none';
+                document.getElementById('explorerBannerWrap').style.display = 'none';
+
+                // Render the explorer banner for this country
+                if (CDATA[countryName]) {
+                    renderBanner(countryName, {
+                        bg: 'expBannerBg', flag: 'expFlag', landmark: 'expLandmark',
+                        tagline: 'expTagline', desc: 'expDesc', stats: 'expStats'
+                    });
+                    document.getElementById('expName').textContent = countryName;
+                    document.getElementById('explorerBannerWrap').style.display = 'block';
+                }
+
+                // Smooth scroll to the banner
+                document.getElementById('explorerBannerWrap').scrollIntoView({
+                    behavior: 'smooth', block: 'start'
+                });
+
+                loading.style.display = 'block';
+
+                fetch('/api/universities/by-country/' + countryId)
+                    .then(function (res) {
+                        if (!res.ok) throw new Error(res.status);
+                        return res.json();
+                    })
+                    .then(function (unis) {
+                        loading.style.display = 'none';
+                        if (!unis.length) { empty.style.display = 'block'; return; }
+                        grid.innerHTML     = unis.map(buildCard).join('');
+                        grid.style.display = 'grid';
+                    })
+                    .catch(function () {
+                        loading.style.display = 'none';
+                        empty.textContent = 'Could not load universities. Please try again.';
+                        empty.style.display = 'block';
+                    });
+            });
+        });
+    })();
+
+    // Mouse-reactive 3D tilt on cards
+    (function () {
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) return;
+
+        var MAX = 12; // degrees
+        document.querySelectorAll('.tilt').forEach(function (card) {
+            card.addEventListener('mousemove', function (e) {
+                var r = card.getBoundingClientRect();
+                var px = (e.clientX - r.left) / r.width  - 0.5;
+                var py = (e.clientY - r.top)  / r.height - 0.5;
+                card.style.transform =
+                    'rotateY(' + (px * MAX) + 'deg) rotateX(' + (-py * MAX) +
+                    'deg) translateY(-6px)';
+            });
+            card.addEventListener('mouseleave', function () {
+                card.style.transform = '';
+            });
+        });
+
+        // Subtle parallax on the caps cluster
+        var stage = document.querySelector('.caps-stage');
+        var hero  = document.querySelector('.hero-section');
+        if (stage && hero) {
+            hero.addEventListener('mousemove', function (e) {
+                var r = hero.getBoundingClientRect();
+                var px = (e.clientX - r.left) / r.width  - 0.5;
+                var py = (e.clientY - r.top)  / r.height - 0.5;
+                stage.style.transform =
+                    'rotateY(' + (px * 10) + 'deg) rotateX(' + (-py * 8) + 'deg)';
+            });
+            hero.addEventListener('mouseleave', function () {
+                stage.style.transform = '';
+            });
+        }
+    })();
+</script>
+
+</body>
+</html>
