@@ -946,6 +946,46 @@
             margin: 0 auto;
         }
 
+        /* ── Course Programmes Section ── */
+        .uni-courses { margin: 10px 0 6px; }
+
+        .courses-divider {
+            font-size: 9px; font-weight: 700; letter-spacing: 2.5px;
+            text-transform: uppercase; color: #b0b8c8; margin-bottom: 8px;
+        }
+
+        .level-group { margin-bottom: 8px; }
+
+        .level-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 9px; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; padding: 3px 9px 3px 7px;
+            border-radius: 10px; margin-bottom: 5px; line-height: 1;
+        }
+        .level-badge::before { content:''; width:6px; height:6px; border-radius:50%; }
+
+        .lvl-bachelors { background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; }
+        .lvl-bachelors::before { background:#1565c0; }
+        .lvl-masters   { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+        .lvl-masters::before   { background:#2e7d32; }
+        .lvl-phd       { background:#f3e5f5; color:#6a1b9a; border:1px solid #ce93d8; }
+        .lvl-phd::before       { background:#6a1b9a; }
+        .lvl-diploma   { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; }
+        .lvl-diploma::before   { background:#e65100; }
+
+        .course-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+        .course-chip {
+            font-size: 10px; color: #445; background: #f4f6fb;
+            border: 1px solid #dde2ec; border-radius: 6px;
+            padding: 2px 8px; white-space: nowrap;
+        }
+        .chip-more {
+            font-size: 10px; color: var(--gold); background: rgba(201,168,76,0.08);
+            border: 1px solid rgba(201,168,76,0.3); border-radius: 6px;
+            padding: 2px 8px; font-weight: 600; white-space: nowrap;
+        }
+
         /* Spinning gold ring shown while the fetch is in-flight */
         .loading-spinner {
             width: 40px; height: 40px;
@@ -1143,9 +1183,14 @@
             <div class="section-head">
                 <p class="section-tag">Your Preferred Destination</p>
                 <h2 class="section-title">
-                    Universities in
+                    {% if study_level %}{{ study_level }}{% endif %} Universities in
                     <span class="pref-country-name">{{ preferred_country }}</span>
                 </h2>
+                {% if study_level %}
+                <p style="text-align:center;margin-top:10px;font-size:13px;color:#8a92a3;">
+                    Showing only <strong style="color:var(--gold)">{{ study_level }}</strong> programmes — based on your study level preference
+                </p>
+                {% endif %}
             </div>
 
             {% if preferred_unis %}
@@ -1172,6 +1217,24 @@
                         <div class="uni-scholarship">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                             {{ u[7] }}
+                        </div>
+                        {% endif %}
+                        {# ── Courses section ── #}
+                        {% if u[8] %}
+                        {% set grouped = {} %}
+                        {% for c in u[8] %}{% if c.level not in grouped %}{% set _ = grouped.update({c.level: []}) %}{% endif %}{% set _ = grouped[c.level].append(c.name) %}{% endfor %}
+                        <div class="uni-courses">
+                            <div class="courses-divider">Available Programmes</div>
+                            {% for lvl, names in grouped.items() %}
+                            {% set badge_cls = 'lvl-bachelors' if lvl == 'Bachelors' else ('lvl-masters' if lvl == 'Masters' else ('lvl-phd' if lvl == 'PhD' else 'lvl-diploma')) %}
+                            <div class="level-group">
+                                <span class="level-badge {{ badge_cls }}">{{ lvl }}</span>
+                                <div class="course-chips">
+                                    {% for n in names[:3] %}<span class="course-chip">{{ n }}</span>{% endfor %}
+                                    {% if names|length > 3 %}<span class="chip-more">+{{ names|length - 3 }} more</span>{% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
                         {% endif %}
                         {% if raw_url %}
@@ -1202,7 +1265,12 @@
         <div class="country-explorer">
             <div class="section-head">
                 <p class="section-tag">All Destinations</p>
-                <h2 class="section-title">Explore by Country</h2>
+                <h2 class="section-title">Explore {% if study_level %}{{ study_level }}{% endif %} Universities by Country</h2>
+                {% if study_level %}
+                <p style="text-align:center;margin-top:10px;font-size:13px;color:#8a92a3;">
+                    Click a country to see all <strong style="color:var(--gold)">{{ study_level }}</strong> universities available there
+                </p>
+                {% endif %}
             </div>
 
             <!-- Destination card grid — one card per country in DB -->
@@ -1313,7 +1381,7 @@
                 </svg>
             </div>
             <div class="contact-card-title">Email</div>
-            <div class="contact-card-value">info@higheredu.com<br>support@higheredu.com</div>
+            <div class="contact-card-value"></div>
         </div>
         <div class="contact-card tilt">
             <div class="contact-icon-wrap">
@@ -1322,7 +1390,7 @@
                 </svg>
             </div>
             <div class="contact-card-title">Phone</div>
-            <div class="contact-card-value">+1 (800) 123-4567<br>Mon – Fri, 9am – 6pm</div>
+            <div class="contact-card-value"></div>
         </div>
         <div class="contact-card tilt">
             <div class="contact-icon-wrap">
@@ -1332,7 +1400,7 @@
                 </svg>
             </div>
             <div class="contact-card-title">Address</div>
-            <div class="contact-card-value">42 Education Lane, Suite 300<br>New York, NY 10001, USA</div>
+            <div class="contact-card-value"></div>
         </div>
     </div>
 </section>
@@ -1541,6 +1609,53 @@
             return url.startsWith('http') ? url : 'https://' + url;
         }
 
+        // Groups a flat courses array into { level: [name, ...] }
+        function groupCourses(courses) {
+            var order = ['Bachelors','Masters','PhD','Diploma'];
+            var map = {};
+            (courses || []).forEach(function(c) {
+                if (!map[c.level]) map[c.level] = [];
+                map[c.level].push(c.name);
+            });
+            // Sort levels in canonical order
+            var sorted = {};
+            order.forEach(function(lvl) { if (map[lvl]) sorted[lvl] = map[lvl]; });
+            Object.keys(map).forEach(function(lvl) { if (!sorted[lvl]) sorted[lvl] = map[lvl]; });
+            return sorted;
+        }
+
+        var LEVEL_CLASS = {
+            'Bachelors': 'lvl-bachelors',
+            'Masters':   'lvl-masters',
+            'PhD':       'lvl-phd',
+            'Diploma':   'lvl-diploma'
+        };
+
+        function buildCoursesHtml(courses) {
+            if (!courses || !courses.length) return '';
+            var grouped = groupCourses(courses);
+            var levels = Object.keys(grouped);
+            if (!levels.length) return '';
+
+            var html = '<div class="uni-courses"><div class="courses-divider">Available Programmes</div>';
+            levels.forEach(function(lvl) {
+                var names = grouped[lvl];
+                var cls = LEVEL_CLASS[lvl] || 'lvl-diploma';
+                html += '<div class="level-group">';
+                html += '<span class="level-badge ' + cls + '">' + lvl + '</span>';
+                html += '<div class="course-chips">';
+                names.slice(0, 3).forEach(function(n) {
+                    html += '<span class="course-chip">' + n + '</span>';
+                });
+                if (names.length > 3) {
+                    html += '<span class="chip-more">+' + (names.length - 3) + ' more</span>';
+                }
+                html += '</div></div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
         // Builds the HTML string for one university card
         function buildCard(u) {
             var href = toHref(u.website);
@@ -1550,12 +1665,13 @@
                 ? '<div class="uni-fee"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>~$' + Number(u.tuition_fee_usd).toLocaleString() + ' / yr</div>' : '';
             var scholarshipHtml = u.scholarship_info
                 ? '<div class="uni-scholarship"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' + u.scholarship_info + '</div>' : '';
+            var coursesHtml = buildCoursesHtml(u.courses);
             var websiteLink = u.website
                 ? '<a href="' + href + '" class="uni-website" target="_blank" rel="noopener">' + u.website + '</a>' : '';
             return '<div class="uni-card">' + rankBadge +
                 '<div class="uni-card-body"><h3 class="uni-name">' + u.name + '</h3>' +
                 '<div class="uni-city"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' + u.city + ', ' + u.country + '</div>' +
-                feeHtml + scholarshipHtml + websiteLink + '</div>' +
+                feeHtml + scholarshipHtml + coursesHtml + websiteLink + '</div>' +
                 '<div class="uni-card-footer"><a href="' + href + '" class="uni-apply-btn" target="_blank" rel="noopener">Apply Now →</a></div></div>';
         }
 

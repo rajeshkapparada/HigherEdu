@@ -41,11 +41,19 @@ def create_table():
             country VARCHAR(100),
             course VARCHAR(100),
             image_path VARCHAR(255),
+            phone VARCHAR(20),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     conn.commit()
-    cur.close()
+    # Add phone column to existing tables that predate this field
+    try:
+        cur = conn.cursor()
+        cur.execute("ALTER TABLE students ADD COLUMN IF NOT EXISTS phone VARCHAR(20)")
+        conn.commit()
+        cur.close()
+    except Exception:
+        conn.rollback()
     release_connection(conn)    # return connection back to pool
 
 
@@ -847,6 +855,175 @@ def create_courses_table():
             created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    conn.commit()
+    cur.close()
+    release_connection(conn)
+
+
+def seed_courses():
+    """Insert representative courses (one per level) for every college that has none.
+    Safe to run on every startup — skips colleges that already have courses seeded."""
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute('SELECT id, name FROM colleges ORDER BY id')
+    colleges = cur.fetchall()
+
+    # Institutions that only run postgraduate programmes (no Bachelors)
+    postgrad_only = {
+        'Karolinska Institute',
+        'London School of Economics',
+    }
+    # Primarily teaching / vocational — limited or no doctoral research stream
+    no_phd_set = {
+        'Eastern Institute of Technology',
+        'Unitec Institute of Technology',
+        'Malmö University',
+        'Technological University Dublin',
+        'Munster Technological University',
+        'South East Technological University',
+        'Dublin City University',
+    }
+
+    # Representative courses per level
+    _LEVEL_COURSES = {
+        'Bachelors': [
+            ('BSc Computer Science', '3 years',
+             'Undergraduate programme covering algorithms, software engineering, and systems design.'),
+            ('BA Business Administration', '3 years',
+             'Undergraduate business degree with modules in finance, marketing, and management.'),
+            ('BEng Engineering', '4 years',
+             'Accredited undergraduate engineering degree with specialisations in mechanical, civil, or electrical.'),
+        ],
+        'Masters': [
+            ('MSc Data Science & Artificial Intelligence', '1 year',
+             'Advanced postgraduate programme in machine learning, big data analytics, and AI applications.'),
+            ('MBA Business Administration', '2 years',
+             'Globally recognised MBA developing leadership, strategy, and cross-functional business skills.'),
+            ('MSc Computer Science', '1 year',
+             'Postgraduate programme in advanced algorithms, distributed computing, and software research.'),
+        ],
+        'PhD': [
+            ('PhD Computer Science & Engineering', '4 years',
+             'Doctoral research programme producing original contributions to computing and engineering.'),
+            ('PhD Natural Sciences', '3 years',
+             'Research doctorate in physics, chemistry, biology, or environmental science.'),
+            ('PhD Business & Economics', '4 years',
+             'Doctoral programme conducting original research in finance, economics, or management.'),
+        ],
+        'Diploma': [
+            ('Postgraduate Diploma in Business Management', '1 year',
+             'Intensive postgraduate diploma covering core business management principles and practice.'),
+            ('Diploma in Information Technology', '1 year',
+             'Practical qualification in software development, networking, and IT project management.'),
+        ],
+    }
+
+    for college_id, college_name in colleges:
+        cur.execute('SELECT COUNT(*) FROM courses WHERE college_id = %s', (college_id,))
+        if cur.fetchone()[0] > 0:
+            continue  # already seeded for this college
+
+        levels_to_add = ['Masters', 'Diploma']
+        if college_name not in postgrad_only:
+            levels_to_add = ['Bachelors'] + levels_to_add
+        if college_name not in no_phd_set:
+            levels_to_add.append('PhD')
+
+        for level in levels_to_add:
+            for (cname, duration, desc) in _LEVEL_COURSES[level]:
+                cur.execute('''
+                    INSERT INTO courses
+                        (name, level, fee_per_year, currency, duration, description, college_id)
+                    VALUES (%s, %s, NULL, 'USD', %s, %s, %s)
+                ''', (cname, level, duration, desc, college_id))
+
+    conn.commit()
+    cur.close()
+    release_connection(conn)
+
+
+def seed_expanded_courses():
+    """Add specific discipline-named courses (CS, PM, AI, MBA, etc.) to all colleges.
+    Idempotent — skips any course name that already exists for that college."""
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    _EXPANDED = [
+        # ── Bachelors ─────────────────────────────────────────────────────────
+        ('BSc Software Engineering',               'Bachelors', '4 years',
+         'Software design, development lifecycle, testing, and agile delivery.'),
+        ('BSc Data Science & Analytics',           'Bachelors', '3 years',
+         'Statistics, machine learning, Python/R, SQL, and data visualisation.'),
+        ('BSc Artificial Intelligence',            'Bachelors', '3-4 years',
+         'Neural networks, computer vision, NLP, robotics, and AI ethics.'),
+        ('BSc Cybersecurity',                      'Bachelors', '3 years',
+         'Network security, cryptography, ethical hacking, and digital forensics.'),
+        ('BSc Electrical & Electronic Engineering','Bachelors', '4 years',
+         'Circuits, embedded systems, power electronics, and signal processing.'),
+        ('BSc Mechanical Engineering',             'Bachelors', '4 years',
+         'Thermodynamics, fluid dynamics, CAD, manufacturing, and robotics.'),
+        ('BA Economics',                           'Bachelors', '3 years',
+         'Macro/microeconomics, econometrics, international trade, and policy.'),
+        ('BA International Business',              'Bachelors', '3-4 years',
+         'Global business strategy, cross-cultural management, and trade law.'),
+        ('BSc Finance & Accounting',               'Bachelors', '3 years',
+         'Financial reporting, investment analysis, taxation, and auditing.'),
+        ('BSc Information Systems',                'Bachelors', '3 years',
+         'Enterprise systems, database design, ERP, and digital transformation.'),
+        # ── Masters ───────────────────────────────────────────────────────────
+        ('MSc Cybersecurity & Network Security',   'Masters', '1 year',
+         'Threat analysis, penetration testing, cloud security, and compliance.'),
+        ('MSc Software Engineering',               'Masters', '1-2 years',
+         'Advanced software architecture, DevOps, microservices, and cloud-native.'),
+        ('MSc Project Management',                 'Masters', '1 year',
+         'Agile, PRINCE2, PMP frameworks, stakeholder management, and risk.'),
+        ('MSc Information Systems Management',     'Masters', '1 year',
+         'IT governance, enterprise architecture, and digital business strategy.'),
+        ('MSc Finance & Investment',               'Masters', '1 year',
+         'Portfolio management, derivatives, financial modelling, and risk analysis.'),
+        ('MSc International Business',             'Masters', '1 year',
+         'Global markets, cross-border operations, and emerging-economy strategy.'),
+        ('MSc Supply Chain & Operations',          'Masters', '1 year',
+         'Logistics, procurement, lean operations, and sustainability management.'),
+        ('MBA International Management',           'Masters', '2 years',
+         'Global strategy, cross-cultural leadership, and entrepreneurship.'),
+        # ── PhD ───────────────────────────────────────────────────────────────
+        ('PhD Data Science & Machine Learning',    'PhD', '3-4 years',
+         'Doctoral research in statistical learning, deep learning, or data systems.'),
+        ('PhD Electrical Engineering',             'PhD', '3-4 years',
+         'Research in power systems, VLSI, photonics, or signal processing.'),
+        ('PhD Mechanical Engineering',             'PhD', '3-5 years',
+         'Research in robotics, manufacturing, fluid dynamics, or materials.'),
+        ('PhD Economics & Econometrics',           'PhD', '3-5 years',
+         'Applied econometrics, economic theory, or development economics.'),
+        ('PhD Biomedical Sciences',                'PhD', '3-4 years',
+         'Medical research, drug discovery, genomics, or neuroscience.'),
+        # ── Diploma ───────────────────────────────────────────────────────────
+        ('Diploma in Data Analytics',              'Diploma', '6-12 months',
+         'Excel, SQL, Python, Tableau — practical business analytics skills.'),
+        ('Diploma in Project Management',          'Diploma', '6-12 months',
+         'Agile, Scrum, PRINCE2, and PMP examination preparation.'),
+        ('Diploma in Digital Marketing',           'Diploma', '6-12 months',
+         'SEO, SEM, social media strategy, content marketing, and analytics.'),
+    ]
+
+    cur.execute('SELECT id FROM colleges ORDER BY id')
+    college_ids = [r[0] for r in cur.fetchall()]
+
+    for college_id in college_ids:
+        for (name, level, duration, desc) in _EXPANDED:
+            cur.execute(
+                'SELECT 1 FROM courses WHERE college_id = %s AND name = %s',
+                (college_id, name)
+            )
+            if not cur.fetchone():
+                cur.execute('''
+                    INSERT INTO courses
+                        (name, level, fee_per_year, currency, duration, description, college_id)
+                    VALUES (%s, %s, NULL, 'USD', %s, %s, %s)
+                ''', (name, level, duration, desc, college_id))
+
     conn.commit()
     cur.close()
     release_connection(conn)

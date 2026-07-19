@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 import db
+import zoho_crm
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'overseas_portal_2024')
@@ -29,6 +30,7 @@ def register():
         study_level = request.form['study_level']
         country     = request.form['country']
         course      = request.form['course']
+        phone       = request.form.get('phone', '').strip() or None
 
         conn_id = db.get_connection()
         cur_id  = conn_id.cursor()
@@ -48,11 +50,15 @@ def register():
         cur = conn.cursor()
         try:
             cur.execute('''
-                INSERT INTO students (name, email, password, student_id, study_level, country, course, image_path)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (name, email, password, student_id, study_level, country, course, image_path))
+                INSERT INTO students (name, email, password, student_id, study_level, country, course, image_path, phone)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (name, email, password, student_id, study_level, country, course, image_path, phone))
             conn.commit()
             flash('Registration successful! Please login.', 'success')
+            try:
+                zoho_crm.create_lead(name, email, course, country, study_level, phone)
+            except Exception:
+                pass  # don't block registration if Zoho fails
             return redirect(url_for('login'))
         except Exception:
             conn.rollback()
@@ -79,8 +85,9 @@ def login():
         db.release_connection(conn)         # return connection back to pool
 
         if student and check_password_hash(student[3], password):
-            session['student_id']   = student[0]
-            session['student_name'] = student[1]
+            session['student_id']    = student[0]
+            session['student_name']  = student[1]
+            session['study_level']   = student[5]
             flash(f'Welcome, {student[1]}!', 'success')
             return redirect(url_for('dashboard'))
         else:
@@ -97,28 +104,63 @@ def dashboard():
     conn = db.get_connection()
     cur  = conn.cursor()
 
-    # Fetch this student's preferred country (the text they typed at registration)
-    cur.execute('SELECT country FROM students WHERE id = %s', (session['student_id'],))
+    # Fetch this student's preferred country and study level
+    cur.execute('SELECT country, study_level FROM students WHERE id = %s', (session['student_id'],))
     row = cur.fetchone()
     preferred_country = (row[0] or '').strip()
+    study_level = (row[1] or '').strip()
 
-    # ── Query 1: Universities in the preferred country ─────────────────────────
+    # ── Query 1: Universities in the preferred country filtered by study level ──
     # Columns: id[0] name[1] website[2] ranking[3] city[4] country[5]
     #          tuition_fee_usd[6] scholarship_info[7]
     preferred_unis = []
     if preferred_country:
-        cur.execute('''
-            SELECT col.id, col.name, col.website, col.ranking,
-                   cit.name AS city, ctr.name AS country,
-                   col.tuition_fee_usd, col.scholarship_info
-            FROM   colleges col
-            JOIN   cities    cit ON col.city_id   = cit.id
-            JOIN   states    st  ON cit.state_id  = st.id
-            JOIN   countries ctr ON st.country_id = ctr.id
-            WHERE  LOWER(ctr.name) = LOWER(%s)
-            ORDER  BY col.ranking ASC NULLS LAST, col.name ASC
-        ''', (preferred_country,))
-        preferred_unis = cur.fetchall()
+        if study_level:
+            cur.execute('''
+                SELECT DISTINCT col.id, col.name, col.website, col.ranking,
+                       cit.name AS city, ctr.name AS country,
+                       col.tuition_fee_usd, col.scholarship_info
+                FROM   colleges col
+                JOIN   cities    cit ON col.city_id    = cit.id
+                JOIN   states    st  ON cit.state_id   = st.id
+                JOIN   countries ctr ON st.country_id  = ctr.id
+                JOIN   courses   crs ON crs.college_id = col.id
+                WHERE  LOWER(ctr.name)  = LOWER(%s)
+                AND    LOWER(crs.level) = LOWER(%s)
+                ORDER  BY col.ranking ASC NULLS LAST, col.name ASC
+            ''', (preferred_country, study_level))
+        else:
+            cur.execute('''
+                SELECT col.id, col.name, col.website, col.ranking,
+                       cit.name AS city, ctr.name AS country,
+                       col.tuition_fee_usd, col.scholarship_info
+                FROM   colleges col
+                JOIN   cities    cit ON col.city_id   = cit.id
+                JOIN   states    st  ON cit.state_id  = st.id
+                JOIN   countries ctr ON st.country_id = ctr.id
+                WHERE  LOWER(ctr.name) = LOWER(%s)
+                ORDER  BY col.ranking ASC NULLS LAST, col.name ASC
+            ''', (preferred_country,))
+        preferred_unis_raw = cur.fetchall()
+
+        # Fetch all courses for those universities in one query
+        courses_map = {}
+        if preferred_unis_raw:
+            uni_ids = [u[0] for u in preferred_unis_raw]
+            cur.execute('''
+                SELECT college_id, level, name, duration
+                FROM   courses
+                WHERE  college_id = ANY(%s)
+                ORDER  BY college_id,
+                    CASE level WHEN 'Bachelors' THEN 1 WHEN 'Masters' THEN 2
+                               WHEN 'PhD' THEN 3 ELSE 4 END,
+                    name
+            ''', (uni_ids,))
+            for row in cur.fetchall():
+                courses_map.setdefault(row[0], []).append(
+                    {'level': row[1], 'name': row[2], 'duration': row[3]}
+                )
+        preferred_unis = [u + (courses_map.get(u[0], []),) for u in preferred_unis_raw]
 
     # ── Query 2: ALL countries that have at least one college ─────────────────
     # No exclusion — we show every destination as a visual tile on the dashboard.
@@ -153,7 +195,8 @@ def dashboard():
                            students=students,
                            preferred_country=preferred_country,
                            preferred_unis=preferred_unis,
-                           other_countries=other_countries)
+                           other_countries=other_countries,
+                           study_level=study_level)
 
 
 @app.route('/logout')
@@ -223,6 +266,7 @@ def api_login():
     if student and check_password_hash(student[3], data['password']):
         session['student_id']   = student[0]
         session['student_name'] = student[1]
+        session['study_level']  = student[5]
         return jsonify({
             'message': f'Welcome, {student[1]}!',
             'student': {
@@ -343,28 +387,65 @@ def api_update_student(student_id):
 @app.route('/api/universities/by-country/<int:country_id>')
 @api_login_required
 def api_universities_by_country(country_id):
-    """Returns all colleges for a given country as JSON (used by the dashboard dropdown)."""
+    """Returns colleges for a country filtered by the logged-in student's study level,
+    each with a nested list of all available courses."""
+    study_level = session.get('study_level', '')
     conn = db.get_connection()
     cur  = conn.cursor()
-    cur.execute('''
-        SELECT col.id, col.name, col.website, col.ranking,
-               cit.name AS city, ctr.name AS country,
-               col.tuition_fee_usd, col.scholarship_info
-        FROM   colleges col
-        JOIN   cities    cit ON col.city_id   = cit.id
-        JOIN   states    st  ON cit.state_id  = st.id
-        JOIN   countries ctr ON st.country_id = ctr.id
-        WHERE  ctr.id = %s
-        ORDER  BY col.ranking ASC NULLS LAST, col.name ASC
-    ''', (country_id,))
+    if study_level:
+        cur.execute('''
+            SELECT DISTINCT col.id, col.name, col.website, col.ranking,
+                   cit.name AS city, ctr.name AS country,
+                   col.tuition_fee_usd, col.scholarship_info
+            FROM   colleges col
+            JOIN   cities    cit ON col.city_id    = cit.id
+            JOIN   states    st  ON cit.state_id   = st.id
+            JOIN   countries ctr ON st.country_id  = ctr.id
+            JOIN   courses   crs ON crs.college_id = col.id
+            WHERE  ctr.id = %s
+            AND    LOWER(crs.level) = LOWER(%s)
+            ORDER  BY col.ranking ASC NULLS LAST, col.name ASC
+        ''', (country_id, study_level))
+    else:
+        cur.execute('''
+            SELECT col.id, col.name, col.website, col.ranking,
+                   cit.name AS city, ctr.name AS country,
+                   col.tuition_fee_usd, col.scholarship_info
+            FROM   colleges col
+            JOIN   cities    cit ON col.city_id   = cit.id
+            JOIN   states    st  ON cit.state_id  = st.id
+            JOIN   countries ctr ON st.country_id = ctr.id
+            WHERE  ctr.id = %s
+            ORDER  BY col.ranking ASC NULLS LAST, col.name ASC
+        ''', (country_id,))
     rows = cur.fetchall()
+
+    # Fetch all courses for these universities in one query
+    courses_map = {}
+    if rows:
+        uni_ids = [r[0] for r in rows]
+        cur.execute('''
+            SELECT college_id, level, name, duration
+            FROM   courses
+            WHERE  college_id = ANY(%s)
+            ORDER  BY college_id,
+                CASE level WHEN 'Bachelors' THEN 1 WHEN 'Masters' THEN 2
+                           WHEN 'PhD' THEN 3 ELSE 4 END,
+                name
+        ''', (uni_ids,))
+        for row in cur.fetchall():
+            courses_map.setdefault(row[0], []).append(
+                {'level': row[1], 'name': row[2], 'duration': row[3]}
+            )
+
     cur.close()
     db.release_connection(conn)
 
     return jsonify([
         {'id': r[0], 'name': r[1], 'website': r[2], 'ranking': r[3],
          'city': r[4], 'country': r[5],
-         'tuition_fee_usd': r[6], 'scholarship_info': r[7]}
+         'tuition_fee_usd': r[6], 'scholarship_info': r[7],
+         'courses': courses_map.get(r[0], [])}
         for r in rows
     ]), 200
 
@@ -906,6 +987,32 @@ def dev_delete_course(cid):
     return redirect(url_for('dev_courses'))
 
 
+# ── Zoho CRM OAuth Routes ──────────────────────────────────────────────────────
+
+@app.route('/zoho/auth')
+def zoho_auth():
+    auth_url = (
+        'https://accounts.zoho.com/oauth/v2/auth'
+        '?scope=ZohoCRM.modules.leads.CREATE'
+        f'&client_id={zoho_crm.CLIENT_ID}'
+        '&response_type=code'
+        '&access_type=offline'
+        f'&redirect_uri={zoho_crm.REDIRECT_URI}'
+    )
+    return redirect(auth_url)
+
+
+@app.route('/zoho/callback')
+def zoho_callback():
+    code = request.args.get('code')
+    if not code:
+        return 'Error: No code received from Zoho.', 400
+    result = zoho_crm.exchange_code_for_tokens(code)
+    if result.get('refresh_token'):
+        return 'Zoho connected successfully! You can close this tab.'
+    return f'Something went wrong: {result}', 400
+
+
 if __name__ == '__main__':
     db.create_table()
     db.create_admin_table()
@@ -917,4 +1024,6 @@ if __name__ == '__main__':
     db.add_ranking_to_colleges()
     db.create_courses_table()
     db.seed_data()
+    db.seed_courses()
+    db.seed_expanded_courses()
     app.run(debug=True)
